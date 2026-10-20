@@ -1,0 +1,544 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+  :root { 
+    --bg-body: #eef2f6;
+    --bg-scene: #f4f7f6;
+    --text-main: #2d3748;
+  }
+
+  * { box-sizing: border-box; margin: 0; font-family: 'Nunito', sans-serif; }
+
+  body {
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: var(--bg-body); overflow: hidden;
+  }
+
+  /* --- MAIN CARD --- */
+  .app-card {
+    position: relative; width: 380px; background: white; border-radius: 36px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; overflow: hidden;
+    animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn { 
+    0% { transform: scale(0.9) translateY(20px); opacity: 0; } 
+    100% { transform: scale(1) translateY(0); opacity: 1; } 
+  }
+
+  /* --- ENVIRONMENT --- */
+  .scene {
+    background-color: var(--bg-scene);
+    position: relative; padding: 24px 24px 0 24px;
+    display: flex; flex-direction: column; align-items: center;
+    transition: background-color 1s ease; border-bottom: 2px solid rgba(0,0,0,0.03);
+    height: 280px;
+  }
+
+  .top-controls {
+    width: 100%; display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; z-index: 10;
+  }
+  .weather-sim { 
+    display: flex; gap: 4px; background: rgba(255,255,255,0.7); 
+    padding: 6px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .weather-btn { 
+    font-size: 18px; cursor: pointer; transition: all 0.2s; padding: 6px; border-radius: 12px; opacity: 0.4;
+  }
+  .weather-btn.active { opacity: 1; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transform: scale(1.1); }
+  .settings-btn { font-size: 24px; cursor: pointer; color: #cbd5e0; transition: 0.3s; }
+  .settings-btn:hover { transform: rotate(90deg); color: #4a5568; }
+
+  /* --- THE PREMIUM PLANT --- */
+  .plant-wrapper { position: relative; cursor: pointer; margin-top: 10px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+  
+  .plant-shadow {
+    position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+    width: 90px; height: 15px; background: rgba(0,0,0,0.1); border-radius: 50%;
+    filter: blur(4px); transition: all 0.5s; z-index: -1;
+  }
+
+  .plant-svg { transition: filter 1s; transform-origin: bottom center; }
+  
+  /* Breathing Animation */
+  @keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.02) scaleX(0.99); } }
+  .plant-body { transform-origin: bottom center; animation: breathe 3s ease-in-out infinite; }
+  .plant.droop-3 .plant-body { animation-duration: 5s; }
+  .plant.droop-4 .plant-body { animation-duration: 7s; }
+
+  /* Leaf Drooping */
+  .leaf-left { transform-origin: 100px 135px; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+  .leaf-right { transform-origin: 100px 115px; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+  .leaf-top { transform-origin: 100px 78px; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+  
+  .plant.droop-1 .leaf-left { transform: rotate(10deg); }
+  .plant.droop-1 .leaf-right { transform: rotate(-5deg); }
+  .plant.droop-2 .leaf-left { transform: rotate(20deg); }
+  .plant.droop-2 .leaf-right { transform: rotate(-10deg); }
+  .plant.droop-2 .leaf-top { transform: rotate(5deg) scale(0.9); }
+  .plant.droop-3 .leaf-left { transform: rotate(35deg); }
+  .plant.droop-3 .leaf-right { transform: rotate(-20deg); }
+  .plant.droop-3 .leaf-top { transform: rotate(15deg) scale(0.8); }
+  .plant.droop-4 .leaf-left { transform: rotate(55deg); }
+  .plant.droop-4 .leaf-right { transform: rotate(-35deg); }
+  .plant.droop-4 .leaf-top { transform: rotate(30deg) scale(0.6); }
+  .plant.droop-4 { filter: grayscale(0.8); }
+
+  /* Squish Animation */
+  @keyframes squish { 0% { transform: scale(1, 1); } 40% { transform: scale(1.15, 0.85); } 100% { transform: scale(1, 1); } }
+  .plant.squish .plant-body { animation: squish 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+
+  /* Face states */
+  .face .eye { transition: all 0.4s ease; }
+  .face .mouth { transition: all 0.4s ease; }
+  .face .sweat { opacity: 0; transition: opacity 0.4s ease; }
+  .face .blush { opacity: 0; transition: opacity 0.4s ease; }
+
+  .plant.dizzy-human .eye { rx: 5; ry: 5; fill: #e74c3c; } 
+  .plant.dizzy-human .mouth { d: path("M 94 96 Q 100 92 106 96"); }
+  .plant.dizzy-human .sweat { opacity: 1; animation: sweatDrop 1.5s infinite; }
+  
+  @keyframes sweatDrop { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
+
+  .plant.alive .mouth { d: path("M 93 93 Q 100 99 107 93"); }
+  .plant.alive .blush { opacity: 0.7; }
+
+  /* --- DRINKING ANIMATION --- */
+  .watering-can {
+    position: absolute; top: -80px; left: 50%; transform: translateX(-50%) rotate(0deg);
+    font-size: 40px; opacity: 0; pointer-events: none; z-index: 20;
+  }
+  @keyframes pourWater {
+    0% { transform: translateX(-50%) translateY(-20px) rotate(-20deg); opacity: 0; }
+    20% { transform: translateX(-50%) translateY(0) rotate(0deg); opacity: 1; }
+    80% { transform: translateX(-50%) translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateX(-50%) translateY(-20px) rotate(-20deg); opacity: 0; }
+  }
+  .watering-can.pour { animation: pourWater 2s ease-in-out forwards; }
+
+  /* --- BUBBLE & PARTICLES --- */
+  .bubble {
+    position: absolute; top: -50px; left: 50%; translate: -50% 0;
+    background: #2d3748; border-radius: 16px; padding: 10px 16px; 
+    font-size: 13px; font-weight: 700; color: white;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); opacity: 0; transform: translateY(10px);
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; white-space: nowrap; z-index: 50;
+  }
+  .bubble::after { content: ""; position: absolute; bottom: -6px; left: 50%; translate: -50% 0; border: 7px solid transparent; border-top-color: #2d3748; border-bottom: 0; }
+  .bubble.show { opacity: 1; transform: translateY(0); }
+
+  .particle { position: absolute; font-size: 24px; pointer-events: none; animation: floatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; z-index: 100; }
+  @keyframes floatUp { to { transform: translate(var(--dx), -100px) scale(0.5); opacity: 0; } }
+
+  /* --- DASHBOARD --- */
+  .dashboard { background: white; padding: 24px; }
+  .stats { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .stat-pill {
+    display: flex; align-items: center; background: #f7fafc; padding: 12px 16px; border-radius: 20px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  }
+  .stat-icon { font-size: 20px; margin-right: 12px; }
+  .stat-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .stat-header { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-header span:last-child { color: #4a5568; }
+  
+  .bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s ease, background 0.5s ease; position: relative; }
+  .bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+  #water-bar { background: #58cc02; width: 100%; }
+  #human-bar { background: #1cb0f6; width: 100%; }
+
+  /* --- BUTTON --- */
+  .btn {
+    width: 100%; border: none; padding: 16px 20px; border-radius: 20px; 
+    font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+    transition: all 0.1s ease; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .drink-btn { 
+    background: linear-gradient(180deg, #1cb0f6 0%, #1899d6 100%); color: white; box-shadow: 0 4px 0 #1478a8, 0 8px 15px rgba(28, 176, 246, 0.3); 
+  }
+  .drink-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #1478a8, 0 4px 10px rgba(28, 176, 246, 0.3); }
+
+  /* --- MODAL --- */
+  .modal-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 1000;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  
+  .modal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -45%) scale(0.95);
+    background: white; padding: 30px; border-radius: 24px; box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+    z-index: 1001; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); width: 320px;
+  }
+  .modal.show { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%) scale(1); }
+  .modal h3 { margin-bottom: 20px; color: #2d3748; font-size: 20px; font-weight: 900; text-align: center; }
+  
+  .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+  .custom-input { 
+    flex: 1; padding: 14px 16px; font-size: 16px; font-weight: 700; border-radius: 16px; 
+    border: 2px solid #e2e8f0; outline: none; transition: border 0.2s; background: #f7fafc;
+  }
+  .custom-input:focus { border-color: #1cb0f6; }
+  .select-unit {
+    padding: 12px; border-radius: 16px; border: 2px solid #e2e8f0; 
+    font-size: 14px; font-weight: 700; color: #2d3748; outline: none; cursor: pointer; background: #f7fafc;
+  }
+  
+  .modal-btn { background: linear-gradient(180deg, #58cc02 0%, #46a302 100%); color: white; box-shadow: 0 4px 0 #378003; border-radius: 16px; }
+  .modal-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #378003; }
+</style>
+
+<div class="app-card">
+  
+  <div class="scene" id="scene">
+    <div class="top-controls">
+      <div class="weather-sim">
+        <div class="weather-btn" id="weather-sunny" title="Sunny">☀️</div>
+        <div class="weather-btn" id="weather-cloudy" title="Cloudy">☁️</div>
+        <div class="weather-btn" id="weather-rainy" title="Rainy">🌧️</div>
+      </div>
+      <div class="settings-btn" id="settings-btn">⚙️</div>
+    </div>
+
+    <div class="bubble" id="bubble">System online 🌱</div>
+    
+    <div class="plant-wrapper" id="plant-wrapper">
+      <div class="watering-can" id="watering-can">🚿</div>
+      <div class="plant-shadow" id="plant-shadow"></div>
+      
+      <!-- THE PREMIUM SVG PLANT -->
+      <svg class="plant-svg alive" id="plant" width="140" height="160" viewBox="0 0 200 220">
+        <defs>
+          <!-- Gradients for 3D look -->
+          <linearGradient id="potGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#d68c6a" />
+            <stop offset="50%" stop-color="#e5a382" />
+            <stop offset="100%" stop-color="#c27b5b" />
+          </linearGradient>
+          <linearGradient id="leafGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#89e219" />
+            <stop offset="100%" stop-color="#58cc02" />
+          </linearGradient>
+          <linearGradient id="leafDark" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#58cc02" />
+            <stop offset="100%" stop-color="#3d9900" />
+          </linearGradient>
+        </defs>
+
+        <g id="plant-body" class="plant-body">
+          <!-- Soil -->
+          <ellipse cx="100" cy="172" rx="28" ry="6" fill="#2e1a14"/> 
+          
+          <!-- Glossy Pot -->
+          <path d="M68 170 h64 l-10 45 h-44 z" fill="url(#potGrad)"/> 
+          <rect x="62" y="162" width="76" height="16" rx="8" fill="#e5a382"/>
+          <!-- Pot Highlight -->
+          <path d="M72 170 h10 l-6 40 h-6 z" fill="rgba(255,255,255,0.2)"/> 
+
+          <!-- Stem -->
+          <path id="stem" d="M100 170 Q100 120 100 75" stroke="#58cc02" stroke-width="6" fill="none" stroke-linecap="round"/>
+
+          <!-- Left Leaf (Curved & Glossy) -->
+          <g class="leaf-left">
+            <path d="M100 135 C 60 130, 40 100, 50 85 C 70 80, 95 100, 100 128 Z" fill="url(#leafGreen)"/>
+            <path d="M100 135 C 70 125, 50 100, 55 88" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- Right Leaf -->
+          <g class="leaf-right">
+            <path d="M100 115 C 130 110, 155 85, 150 65 C 125 65, 105 85, 100 108 Z" fill="url(#leafDark)"/>
+            <path d="M100 115 C 125 105, 145 85, 145 70" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- Top Leaves -->
+          <g class="leaf-top">
+            <path d="M100 78 C 85 50, 85 25, 95 25 C 105 30, 105 55, 100 76 Z" fill="url(#leafGreen)"/>
+            <path d="M100 78 C 115 50, 115 25, 105 25 C 95 30, 95 55, 100 76 Z" fill="url(#leafDark)"/>
+          </g>
+
+          <!-- FACE -->
+          <g class="face">
+            <!-- Blush -->
+            <ellipse class="blush" cx="86" cy="94" rx="6" ry="3.5" fill="#ffb6c1"/>
+            <ellipse class="blush" cx="114" cy="94" rx="6" ry="3.5" fill="#ffb6c1"/>
+
+            <!-- Eyes -->
+            <circle class="eye" cx="93" cy="88" r="3.5" fill="#2d3748"/>
+            <circle class="eye" cx="107" cy="88" r="3.5" fill="#2d3748"/>
+            
+            <!-- Mouth -->
+            <path class="mouth" d="M 93 93 Q 100 99 107 93" stroke="#2d3748" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- Sweat Drop -->
+            <path class="sweat" d="M 116 80 C 122 88, 120 95, 116 95 C 112 95, 110 88, 116 80 Z" fill="#63b3ed"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="stats">
+      <div class="stat-pill">
+        <div class="stat-icon">🪴</div>
+        <div class="stat-content">
+          <div class="stat-header"><span>Plant Hydration</span> <span id="water-val">100%</span></div>
+          <div class="bar-bg"><div class="bar-fill" id="water-bar"></div></div>
+        </div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-icon">🧑</div>
+        <div class="stat-content">
+          <div class="stat-header"><span>My Hydration</span> <span id="human-val">100%</span></div>
+          <div class="bar-bg"><div class="bar-fill" id="human-bar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn drink-btn" id="drink-btn">💧 Log Water Intake</button>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modal-overlay"></div>
+<div class="modal" id="settings-modal">
+  <h3>Reminder Settings</h3>
+  <div class="input-group">
+    <input type="number" class="custom-input" id="custom-time" placeholder="e.g. 45" min="1">
+    <select class="select-unit" id="time-unit">
+      <option value="60000">Mins</option>
+      <option value="3600000">Hours</option>
+    </select>
+  </div>
+  <button class="btn modal-btn" id="save-settings">Save Schedule</button>
+</div>
+
+<script>
+  const scene = document.getElementById('scene');
+  const plantWrapper = document.getElementById('plant-wrapper');
+  const plant = document.getElementById('plant');
+  const plantShadow = document.getElementById('plant-shadow');
+  const wateringCan = document.getElementById('watering-can');
+  const bubble = document.getElementById('bubble');
+  const waterBar = document.getElementById('water-bar');
+  const humanBar = document.getElementById('human-bar');
+  const waterVal = document.getElementById('water-val');
+  const humanVal = document.getElementById('human-val');
+  const drinkBtn = document.getElementById('drink-btn');
+  
+  const settingsBtn = document.getElementById('settings-btn');
+  const modalOverlay = document.getElementById('modal-overlay');
+  const settingsModal = document.getElementById('settings-modal');
+  const saveSettings = document.getElementById('save-settings');
+  const customTime = document.getElementById('custom-time');
+  const timeUnit = document.getElementById('time-unit');
+  const weatherBtns = document.querySelectorAll('.weather-btn');
+
+  let water = 100;
+  let human = 100;
+  let weather = 'cloudy'; 
+  let reminderTimer = null;
+
+  function detectWeather() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
+          .then(res => res.json())
+          .then(data => {
+            const code = data.current_weather.weathercode;
+            if (code === 0) setWeather('sunny');
+            else if (code >= 51) setWeather('rainy');
+            else setWeather('cloudy');
+          }).catch(() => setWeather('cloudy')); 
+      }, () => setWeather('sunny'));
+    } else {
+      setWeather('sunny');
+    }
+  }
+
+  function setWeather(type) {
+    weather = type;
+    weatherBtns.forEach(b => b.classList.remove('active'));
+    document.getElementById(`weather-${type}`).classList.add('active');
+    
+    if(type === 'sunny') {
+      scene.style.setProperty('--bg-scene', '#fff8e1');
+      say("Sunny! We lose hydration faster today.");
+    } else if(type === 'cloudy') {
+      scene.style.setProperty('--bg-scene', '#f4f7f6');
+      say("Cloudy. Normal hydration levels.");
+    } else if(type === 'rainy') {
+      scene.style.setProperty('--bg-scene', '#e0e8f5');
+      say("Rainy! I'm happy, but you need water.");
+    }
+    updateUI();
+  }
+
+  weatherBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.id.replace('weather-', '');
+      setWeather(id);
+    });
+  });
+
+  function updateUI() {
+    const w = Math.round(water);
+    const h = Math.round(human);
+    
+    waterBar.style.width = `${w}%`;
+    humanBar.style.width = `${h}%`;
+    waterVal.innerText = `${w}%`;
+    humanVal.innerText = `${h}%`;
+
+    waterBar.style.background = w < 30 ? '#ff4b4b' : '#58cc02';
+    humanBar.style.background = h < 30 ? '#ff4b4b' : '#1cb0f6';
+
+    if (h < 30) {
+      plant.classList.add('dizzy-human');
+    } else {
+      plant.classList.remove('dizzy-human');
+    }
+
+    let droop = 0;
+    if (w < 80) droop = 1;
+    if (w < 50) droop = 2;
+    if (w < 25) droop = 3;
+    if (w <= 0) droop = 4;
+
+    if (droop > 0) {
+      plantShadow.style.width = "60px";
+      plantShadow.style.opacity = "0.5";
+    } else {
+      plantShadow.style.width = "90px";
+      plantShadow.style.opacity = "1";
+    }
+
+    plant.className.baseVal = `plant-svg droop-${droop}` + (droop < 3 ? ' alive' : '') + (h < 30 ? ' dizzy-human' : '');
+  }
+
+  setInterval(() => {
+    let waterDrain = 0.05; 
+    let humanDrain = 0.03; 
+
+    if (weather === 'sunny') {
+      waterDrain = 0.1; 
+      humanDrain = 0.05; 
+    } else if (weather === 'rainy') {
+      waterDrain = 0.01; 
+      humanDrain = 0.03; 
+    }
+
+    water = Math.max(0, water - waterDrain); 
+    human = Math.max(0, human - humanDrain); 
+    updateUI();
+  }, 2000);
+
+  // --- THE DRINKING ANIMATION ---
+  drinkBtn.addEventListener('click', () => {
+    human = 100; 
+    water = Math.min(100, water + 20); 
+    
+    // Trigger watering can animation
+    wateringCan.classList.add('pour');
+    
+    // Spray water particles over 1.5 seconds
+    let drops = 0;
+    const dropInterval = setInterval(() => {
+      spawnParticle('💧');
+      drops++;
+      if(drops > 8) clearInterval(dropInterval);
+    }, 150);
+
+    // Make the plant squish happily
+    plant.classList.remove('squish');
+    void plant.offsetWidth; 
+    plant.classList.add('squish');
+    
+    setTimeout(() => {
+      wateringCan.classList.remove('pour');
+      if (weather === 'sunny') say("Restored! The heat is tough today.");
+      else if (weather === 'rainy') say("Restored! Good job drinking.");
+      else say("Restored! Nice work.");
+    }, 1800);
+
+    updateUI();
+  });
+
+  plantWrapper.addEventListener('click', () => {
+    water = Math.min(100, water + 25); 
+    plant.classList.remove('squish');
+    void plant.offsetWidth; 
+    plant.classList.add('squish');
+    say("Plant watered.");
+    spawnParticle('🌱');
+    updateUI();
+  });
+
+  settingsBtn.addEventListener('click', () => {
+    settingsModal.classList.add('show');
+    modalOverlay.classList.add('show');
+  });
+
+  modalOverlay.addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+    modalOverlay.classList.remove('show');
+  });
+
+  saveSettings.addEventListener('click', () => {
+    settingsModal.classList.remove('show');
+    modalOverlay.classList.remove('show');
+    
+    const timeValue = parseFloat(customTime.value);
+    const unit = parseInt(timeUnit.value);
+
+    if (!timeValue || timeValue <= 0) {
+      say("Invalid time. Reminders off.");
+      if (reminderTimer) clearInterval(reminderTimer);
+      return;
+    }
+
+    const msTime = timeValue * unit;
+    if (reminderTimer) clearInterval(reminderTimer);
+    if (Notification.permission !== "granted") Notification.requestPermission();
+
+    const unitName = unit === 60000 ? 'mins' : 'hours';
+    say(`Schedule set: every ${timeValue} ${unitName}.`);
+    
+    reminderTimer = setInterval(() => {
+      human = Math.max(0, human - 25); 
+      water = Math.max(0, water - 15);
+      updateUI();
+      say("Time for a water break! 🚨");
+      spawnParticle('💧');
+      if (Notification.permission === "granted") {
+        new Notification("Hydration Check", { body: "Time to drink water and check on your plant." });
+      }
+    }, msTime);
+  });
+
+  function say(text) {
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    clearTimeout(say._t);
+    say._t = setTimeout(() => bubble.classList.remove('show'), 4000); 
+  }
+
+  function spawnParticle(emoji) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emoji;
+    const r = plantWrapper.getBoundingClientRect();
+    p.style.left = (r.left + r.width/2 - 10 + (Math.random()*60-30)) + 'px';
+    p.style.top  = (r.top + 30 + Math.random()*30) + 'px'; // Spawning closer to the top
+    p.style.setProperty('--dx', (Math.random()*60-30) + 'px');
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+
+  detectWeather();
+  updateUI();
+</script>
